@@ -21,7 +21,7 @@ namespace PlatformOne.Console
             }
 
             var tokenClient = new TokenClient(disco.TokenEndpoint, "client", "secret");
-            var tokenResponse = await tokenClient.RequestClientCredentialsAsync("yoda");
+            var tokenResponse = await tokenClient.RequestClientCredentialsAsync("api");
 
             if (tokenResponse.IsError)
             {

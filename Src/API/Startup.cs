@@ -27,7 +27,7 @@ namespace PlatformOne.API
                     {
                         options.Authority = "https://localhost:5000";
                         options.RequireHttpsMetadata = false;
-                        options.ApiName = "yoda";
+                        options.ApiName = "api";
                     });
 
         }
