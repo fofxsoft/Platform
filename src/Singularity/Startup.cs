@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Singularity
+namespace PlatformOne.Identity
 {
     public class Startup
     {

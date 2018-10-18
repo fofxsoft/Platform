@@ -1,7 +1,7 @@
 ﻿using IdentityServer4.Models;
 using System.Collections.Generic;
 
-namespace Singularity
+namespace PlatformOne.Identity
 {
     public class Config
     {
@@ -9,7 +9,7 @@ namespace Singularity
         {
             return new List<ApiResource>
             {
-                new ApiResource("yoda", "Yoda")
+                new ApiResource("api", "API")
             };
         }
 
@@ -21,10 +21,14 @@ namespace Singularity
                 {
                     ClientId = "client",
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
-                    ClientSecrets = {
+                    ClientSecrets =
+                    {
                         new Secret("secret".Sha256())
                     },
-                    AllowedScopes = { "yoda" }
+                    AllowedScopes =
+                    {
+                        "api"
+                    }
                 }
             };
         }

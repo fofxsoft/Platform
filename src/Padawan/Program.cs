@@ -1,10 +1,9 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using IdentityModel.Client;
 
-namespace Padawan
+namespace PlatformOne.Console
 {
     class Program
     {
@@ -16,7 +15,7 @@ namespace Padawan
 
             if (disco.IsError)
             {
-                Console.WriteLine(disco.Error);
+                System.Console.WriteLine(disco.Error);
 
                 return;
             }
@@ -26,13 +25,13 @@ namespace Padawan
 
             if (tokenResponse.IsError)
             {
-                Console.WriteLine(tokenResponse.Error);
+                System.Console.WriteLine(tokenResponse.Error);
 
                 return;
             }
 
-            Console.WriteLine(tokenResponse.Json);
-            Console.WriteLine("\n\n");
+            System.Console.WriteLine(tokenResponse.Json);
+            System.Console.WriteLine("\n\n");
 
             var client = new HttpClient();
 
@@ -42,11 +41,11 @@ namespace Padawan
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine(response.StatusCode);
+                System.Console.WriteLine(response.StatusCode);
             }
             else
             {
-                Console.WriteLine(JArray.Parse(await response.Content.ReadAsStringAsync()));
+                System.Console.WriteLine(JArray.Parse(await response.Content.ReadAsStringAsync()));
             }
         }
     }

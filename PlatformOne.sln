@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28016.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yoda", "src\Yoda\Yoda.csproj", "{FDFE172D-1C4E-4DD0-868A-01BB9B8AA0D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "src\Yoda\API.csproj", "{FDFE172D-1C4E-4DD0-868A-01BB9B8AA0D7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Singularity", "src\Singularity\Singularity.csproj", "{0E465B40-F5F9-42A8-8B31-201718329095}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity", "src\Singularity\Identity.csproj", "{0E465B40-F5F9-42A8-8B31-201718329095}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Padawan", "src\Padawan\Padawan.csproj", "{692FB5F0-BE05-46A2-8D91-0D723F7B0DDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console", "src\Padawan\Console.csproj", "{692FB5F0-BE05-46A2-8D91-0D723F7B0DDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
