@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
 
 namespace Client
 {
@@ -21,12 +23,21 @@ namespace Client
               .AddOpenIdConnect("oidc", options =>
               {
                   options.SignInScheme = "Cookies";
-
                   options.Authority = "https://localhost:5000";
                   options.RequireHttpsMetadata = false;
-
                   options.ClientId = "interface";
                   options.SaveTokens = true;
+
+                  options.Events = new OpenIdConnectEvents
+                  {
+                      OnRemoteFailure = context =>
+                      {
+                          context.Response.Redirect("/");
+                          context.HandleResponse();
+
+                          return Task.FromResult(0);
+                      }
+                  };
               });
 
         }

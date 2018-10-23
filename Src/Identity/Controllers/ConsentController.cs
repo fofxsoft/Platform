@@ -102,7 +102,7 @@ namespace Identity.Controllers
 
                     grantedConsent = new ConsentResponse
                     {
-                        RememberConsent = model.RememberConsent,
+                        RememberConsent = true,
                         ScopesConsented = scopes.ToArray()
                     };
 
@@ -171,15 +171,13 @@ namespace Identity.Controllers
         {
             ConsentModel vm = new ConsentModel
             {
-                RememberConsent = model?.RememberConsent ?? true,
                 ScopesConsented = model?.ScopesConsented ?? Enumerable.Empty<string>(),
 
                 ReturnUrl = returnUrl,
 
                 ClientName = client.ClientName ?? client.ClientId,
                 ClientUrl = client.ClientUri,
-                ClientLogoUrl = client.LogoUri,
-                AllowRememberConsent = client.AllowRememberConsent
+                ClientLogoUrl = client.LogoUri
             };
 
             vm.IdentityScopes = resources.IdentityResources.Select(x => CreateScope(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();

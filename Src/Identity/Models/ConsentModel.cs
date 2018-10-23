@@ -22,12 +22,6 @@ namespace Identity.Models
             set;
         }
 
-        public bool AllowRememberConsent
-        {
-            get;
-            set;
-        }
-
         public IEnumerable<ScopeModel> IdentityScopes
         {
             get;

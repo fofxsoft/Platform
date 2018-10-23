@@ -16,12 +16,6 @@ namespace Identity.Models
             set;
         }
 
-        public bool RememberConsent
-        {
-            get;
-            set;
-        }
-
         public string ReturnUrl
         {
             get;

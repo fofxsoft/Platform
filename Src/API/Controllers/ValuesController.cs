@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Drawing;
 
 namespace PlatformOne.API.Controllers
 {
@@ -24,7 +26,17 @@ namespace PlatformOne.API.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id)
         {
-            return "value";
+            return "value" + id;
+        }
+
+        [Route("distance")]
+        [HttpGet]
+        public ActionResult<IEnumerable<double>> Distance(double x1, double y1, double x2, double y2)
+        {
+            return new double[]
+            {
+                Math.Sqrt(Math.Pow(Math.Abs(x1 - x2), 2) + Math.Pow(Math.Abs(y1 - y2), 2))
+            };
         }
 
         [HttpPost]

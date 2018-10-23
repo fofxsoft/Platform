@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using IdentityModel.Client;
@@ -15,6 +16,10 @@ namespace Console
             {
                 switch (args[0].ToLower())
                 {
+                    case "public":
+                        await AuthenticatePublic();
+                        break;
+
                     case "application":
                         await AuthenticateApplication();
                         break;
@@ -63,10 +68,6 @@ namespace Console
 
                         break;
 
-                    case "public":
-                        System.Console.WriteLine("\n" + await GetResults("https://localhost:5001/api/values", ""));
-                        break;
-
                     default:
                         WriteHelp();
                         break;
@@ -85,6 +86,13 @@ namespace Console
             System.Console.WriteLine("Useage: [action] [options]\n\n");
             System.Console.WriteLine("Actions:\n    Application - Tests the identity server using client authentication.\n    User - Tests the identity server using resource owner authentication.\n    Public - Tests the identity server using no authentication.\n");
             System.Console.WriteLine("Options:\n    Username: [/u|/user|/username] - Sets the username for the User action.\n    Password: [/u|/user|/username] - Sets the password for the User action.");
+
+            return;
+        }
+
+        private static async Task AuthenticatePublic()
+        {
+            await GetInput("");
 
             return;
         }
@@ -111,7 +119,9 @@ namespace Console
                     return;
                 }
 
-                System.Console.WriteLine("\n" + tokenResponse.Json + "\n\n" + await GetResults("https://localhost:5001/api/values", tokenResponse.AccessToken));
+                System.Console.WriteLine("\n" + tokenResponse.Json + "\n\n");
+
+                await GetInput(tokenResponse.AccessToken);
             }
 
             return;
@@ -139,7 +149,77 @@ namespace Console
                     return;
                 }
 
-                System.Console.WriteLine("\n" + tokenResponse.Json + "\n\n" + await GetResults("https://localhost:5001/api/values", tokenResponse.AccessToken));
+                System.Console.WriteLine("\n" + tokenResponse.Json + "\n\n");
+
+                await GetInput(tokenResponse.AccessToken);
+            }
+
+            return;
+        }
+
+        private static async Task GetInput(string accessToken)
+        {
+            while (true)
+            {
+                Point start = null;
+                Point end = null;
+
+                var input = "";
+
+                System.Console.Write("Point 1 [0,0]: ");
+                input = System.Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(input) && input.ToLower() != "exit")
+                {
+                    try
+                    {
+                        start = new Point(input);
+                    }
+                    catch
+                    {
+                        System.Console.WriteLine("\nPlease enter a valid end point. \"X, Y\"\n");
+
+                        start = null;
+                    }
+                }
+                else if (input.ToLower() == "exit")
+                {
+                    return;
+                }
+                else
+                {
+                    start = new Point(0, 0);
+                }
+
+                System.Console.Write("Point 2 : ");
+                input = System.Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(input) && input.ToLower() != "exit")
+                {
+                    try
+                    {
+                        end = new Point(input);
+                    }
+                    catch
+                    {
+                        System.Console.WriteLine("\nPlease enter a valid end point. \"X, Y\"\n");
+
+                        end = null;
+                    }
+                }
+                else if (input.ToLower() == "exit")
+                {
+                    return;
+                }
+                else
+                {
+                    System.Console.WriteLine("\nPlease enter a valid end point. \"X, Y\"\n");
+                }
+
+                if (start != null && end != null)
+                {
+                    System.Console.WriteLine("\n" + await GetResults("https://localhost:5001/api/values/distance/?x1=" + start.X + "&y1=" + start.Y + "&x2=" + end.X + "&y2=" + end.Y, accessToken) + "\n");
+                }
             }
         }
 
