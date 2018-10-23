@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body>
+    <h1>Client</h1>
+
+    <a asp-area="" asp-controller="" asp-action="">Home</a><br />
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <a asp-area="" asp-controller="account" asp-action="">Account</a><br />
+        <a asp-area="" asp-controller="account" asp-action="logout">Logout</a><br />
+    }
+    else
+    {
+        <a asp-area="" asp-controller="account" asp-action="">Login</a><br />
+    }
+
+    <br />
+
+    @RenderBody()
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("scripts", required: false)
+</body>
+
+</html>

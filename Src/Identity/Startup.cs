@@ -2,16 +2,21 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace PlatformOne.Identity
+namespace Identity
 {
     public class Startup
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMvc();
+
             services.AddIdentityServer()
                     .AddDeveloperSigningCredential()
+                    .AddInMemoryIdentityResources(Config.GetIdentityResources())
                     .AddInMemoryApiResources(Config.GetApiResources())
-                    .AddInMemoryClients(Config.GetClients());
+                    .AddInMemoryClients(Config.GetClients())
+                    .AddTestUsers(Config.GetUsers());
+
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -21,7 +26,11 @@ namespace PlatformOne.Identity
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseIdentityServer();
+            app.UseHttpsRedirection()
+               .UseIdentityServer()
+               .UseStaticFiles()
+               .UseMvcWithDefaultRoute();
+
         }
     }
 }

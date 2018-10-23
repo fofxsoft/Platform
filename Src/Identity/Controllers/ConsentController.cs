@@ -1,0 +1,231 @@
+﻿using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using IdentityServer4.Events;
+using IdentityServer4.Models;
+using IdentityServer4.Services;
+using IdentityServer4.Stores;
+using IdentityServer4.Extensions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Identity.Models;
+
+namespace Identity.Controllers
+{
+
+    [Route("consent")]
+    [SecurityHeaders]
+    [Authorize]
+    public class ConsentController : Controller
+    {
+        private readonly IIdentityServerInteractionService _interaction;
+        private readonly IClientStore _clientStore;
+        private readonly IResourceStore _resourceStore;
+        private readonly IEventService _events;
+        private readonly ILogger<ConsentController> _logger;
+
+        public ConsentController(IIdentityServerInteractionService interaction, IClientStore clientStore, IResourceStore resourceStore, IEventService events, ILogger<ConsentController> logger)
+        {
+            _interaction = interaction;
+            _clientStore = clientStore;
+            _resourceStore = resourceStore;
+            _events = events;
+            _logger = logger;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get(string returnUrl)
+        {
+            ConsentModel vm = await BuildConsentAsync(returnUrl);
+
+            if (vm != null)
+            {
+                return View("Index", vm);
+            }
+
+            return View("Error");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Post(ResourceModel model)
+        {
+            PermissionModel result = await ProcessConsent(model);
+
+            if (result.IsRedirect)
+            {
+                if (await _clientStore.IsPkceClientAsync(result.ClientId))
+                {
+                    return Redirect(result.RedirectUri);
+                }
+
+                return Redirect(result.RedirectUri);
+            }
+
+            if (result.HasValidationError)
+            {
+                ModelState.AddModelError("", result.ValidationError);
+            }
+
+            if (result.ShowView)
+            {
+                return View("Index", result.ViewModel);
+            }
+
+            return View("Error");
+        }
+
+        private async Task<PermissionModel> ProcessConsent(ResourceModel model)
+        {
+            PermissionModel result = new PermissionModel();
+            AuthorizationRequest request = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+
+            if (request == null)
+            {
+                return result;
+            }
+
+            ConsentResponse grantedConsent = null;
+
+            if (model.Button == "no")
+            {
+                grantedConsent = ConsentResponse.Denied;
+
+                await _events.RaiseAsync(new ConsentDeniedEvent(User.GetSubjectId(), result.ClientId, request.ScopesRequested));
+            }
+            else if (model.Button == "yes" && model != null)
+            {
+                if (model.ScopesConsented != null && model.ScopesConsented.Any())
+                {
+                    IEnumerable<string> scopes = model.ScopesConsented;
+
+                    grantedConsent = new ConsentResponse
+                    {
+                        RememberConsent = model.RememberConsent,
+                        ScopesConsented = scopes.ToArray()
+                    };
+
+                    await _events.RaiseAsync(new ConsentGrantedEvent(User.GetSubjectId(), request.ClientId, request.ScopesRequested, grantedConsent.ScopesConsented, grantedConsent.RememberConsent));
+                }
+                else
+                {
+                    result.ValidationError = Config.MustChooseOneErrorMessage;
+                }
+            }
+            else
+            {
+                result.ValidationError = Config.InvalidSelectionErrorMessage;
+            }
+
+            if (grantedConsent != null)
+            {
+                await _interaction.GrantConsentAsync(request, grantedConsent);
+
+                result.RedirectUri = model.ReturnUrl;
+                result.ClientId = request.ClientId;
+            }
+            else
+            {
+                result.ViewModel = await BuildConsentAsync(model.ReturnUrl, model);
+            }
+
+            return result;
+        }
+
+        private async Task<ConsentModel> BuildConsentAsync(string returnUrl, ResourceModel model = null)
+        {
+            AuthorizationRequest request = await _interaction.GetAuthorizationContextAsync(returnUrl);
+
+            if (request != null)
+            {
+                Client client = await _clientStore.FindEnabledClientByIdAsync(request.ClientId);
+
+                if (client != null)
+                {
+                    Resources resources = await _resourceStore.FindEnabledResourcesByScopeAsync(request.ScopesRequested);
+
+                    if (resources != null && (resources.IdentityResources.Any() || resources.ApiResources.Any()))
+                    {
+                        return CreateConsent(model, returnUrl, request, client, resources);
+                    }
+                    else
+                    {
+                        _logger.LogError("No scopes matching: {0}", request.ScopesRequested.Aggregate((x, y) => x + ", " + y));
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid client id: {0}", request.ClientId);
+                }
+            }
+            else
+            {
+                _logger.LogError("No consent request matching request: {0}", returnUrl);
+            }
+
+            return null;
+        }
+
+        private ConsentModel CreateConsent(ResourceModel model, string returnUrl, AuthorizationRequest request, Client client, Resources resources)
+        {
+            ConsentModel vm = new ConsentModel
+            {
+                RememberConsent = model?.RememberConsent ?? true,
+                ScopesConsented = model?.ScopesConsented ?? Enumerable.Empty<string>(),
+
+                ReturnUrl = returnUrl,
+
+                ClientName = client.ClientName ?? client.ClientId,
+                ClientUrl = client.ClientUri,
+                ClientLogoUrl = client.LogoUri,
+                AllowRememberConsent = client.AllowRememberConsent
+            };
+
+            vm.IdentityScopes = resources.IdentityResources.Select(x => CreateScope(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            vm.ResourceScopes = resources.ApiResources.SelectMany(x => x.Scopes).Select(x => CreateScope(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+
+            if (resources.OfflineAccess)
+            {
+                vm.ResourceScopes = vm.ResourceScopes.Union(new ScopeModel[] {
+                    new ScopeModel
+                    {
+                        Name = IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess,
+                        DisplayName = Config.OfflineAccessDisplayName,
+                        Description = Config.OfflineAccessDescription,
+                        Emphasize = true,
+                        Checked = (vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null)
+                    }
+                });
+            }
+
+            return vm;
+        }
+
+        private ScopeModel CreateScope(IdentityResource identity, bool check)
+        {
+            return new ScopeModel
+            {
+                Name = identity.Name,
+                DisplayName = identity.DisplayName,
+                Description = identity.Description,
+                Emphasize = identity.Emphasize,
+                Required = identity.Required,
+                Checked = check || identity.Required
+            };
+        }
+
+        public ScopeModel CreateScope(Scope scope, bool check)
+        {
+            return new ScopeModel
+            {
+                Name = scope.Name,
+                DisplayName = scope.DisplayName,
+                Description = scope.Description,
+                Emphasize = scope.Emphasize,
+                Required = scope.Required,
+                Checked = check || scope.Required
+            };
+        }
+    }
+}

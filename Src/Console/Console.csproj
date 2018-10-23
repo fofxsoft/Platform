@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AssemblyName>PlatformOne.Console</AssemblyName>
+    <AssemblyName>Console</AssemblyName>
+    <RootNamespace>Console</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,62 @@
+﻿@model LoginModel
+
+<div class="container">
+    <div class="title">
+        <img class="logo" src="~/img/logo-dark.svg" />
+    </div>
+
+    <div class="content">
+
+        @if (Model.EnableLocalLogin)
+        {
+            <form asp-route="Login" autocomplete="off">
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <fieldset>
+                    <div>
+                        <label asp-for="Username"></label>
+                        <input placeholder="Username" asp-for="Username" autofocus autocomplete="off">
+                    </div>
+
+                    <div>
+                        <label asp-for="Password"></label>
+                        <input type="password" placeholder="Password" asp-for="Password" autocomplete="off">
+                    </div>
+
+                    <div>
+                        <label class="checkbox">
+                            Remember Me
+                            <input asp-for="RememberLogin">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                </fieldset>
+                <div class="login-actions">
+                    <button name="button" class="button accent-button" value="login">Login</button>
+                </div>
+            </form>
+        }
+
+        @if (Model.VisibleExternalProviders.Any())
+        {
+            <ul>
+
+                @foreach (var provider in Model.VisibleExternalProviders)
+                {
+                    <li>
+                        <a asp-controller="External" asp-action="Challenge" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl">@provider.DisplayName</a>
+                    </li>
+                }
+
+            </ul>
+        }
+
+        @if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
+        {
+            <div>
+                <strong>Invalid login request</strong> There are no login schemes configured for this client.
+            </div>
+        }
+
+    </div>
+</div>

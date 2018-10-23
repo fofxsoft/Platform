@@ -30,6 +30,16 @@ namespace PlatformOne.API
                         options.ApiName = "api";
                     });
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("*")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+
+                });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -43,8 +53,11 @@ namespace PlatformOne.API
                 app.UseHsts();
             }
 
-            app.UseAuthentication();
-            app.UseMvc();
+            app.UseCors("default")
+               .UseHttpsRedirection()
+               .UseAuthentication()
+               .UseMvc();
+
         }
     }
 }

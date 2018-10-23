@@ -1,0 +1,131 @@
+﻿@model ConsentModel
+
+<div class="container">
+    <div class="title">
+        <img class="logo" src="~/img/logo-dark.svg" />
+    </div>
+
+    <div class="content">
+
+        @if (Model.ClientLogoUrl != null)
+        {
+            <div>
+                <img src="@Model.ClientLogoUrl">
+            </div>
+        }
+
+        <form asp-action="Index">
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <h1>
+                @Model.ClientName<br />
+                <small>is requesting your permission</small>
+            </h1>
+
+            @if (ViewContext.ModelState.IsValid == false)
+            {
+                <div class="alert alert-danger">
+                    <strong>Error</strong>
+                    <div asp-validation-summary="All"></div>
+                </div>
+            }
+
+            <div class="directions">
+                Uncheck the permissions you do not wish to grant.
+            </div>
+
+            @if (Model.IdentityScopes.Any())
+            {
+                <div class="scope">
+                    Personal Information
+                </div>
+
+                <ul>
+
+                    @foreach (var scope in Model.IdentityScopes)
+                    {
+                        <li>
+                            <div>
+                                <label class="checkbox small">
+
+                                    @if (scope.Required)
+                                    {
+                                        <input type="hidden" name="ScopesConsented" value="@scope.Name" />
+                                    }
+
+                                    @if (scope.Description != null)
+                                    {
+                                        @scope.Description
+                                    }
+                                    else
+                                    {
+                                        @scope.DisplayName
+                                    }
+
+                                    <input type="checkbox" name="ScopesConsented" id="scopes_@scope.Name" value="@scope.Name" @{if (scope.Checked) { <text> checked</text> } } disabled="@scope.Required" />
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        </li>
+                    }
+
+                </ul>
+            }
+
+            @if (Model.ResourceScopes.Any())
+            {
+                <div class="scope">
+                    Application Access
+                </div>
+
+                <ul>
+
+                    @foreach (var scope in Model.ResourceScopes)
+                    {
+                        <li>
+                            <div>
+                                <label class="checkbox small">
+
+                                    @if (scope.Required)
+                                    {
+                                        <input type="hidden" name="ScopesConsented" value="@scope.Name" />
+                                    }
+
+                                    @if (scope.Description != null)
+                                    {
+                                        @scope.Description
+                                    }
+                                    else
+                                    {
+                                        @scope.DisplayName
+                                    }
+
+                                    <input type="checkbox" name="ScopesConsented" id="scopes_@scope.Name" value="@scope.Name" @{if (scope.Checked) { <text> checked</text> } } disabled="@scope.Required" />
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        </li>
+                    }
+
+                </ul>
+            }
+
+            @if (Model.AllowRememberConsent)
+            {
+                <div>
+                    <label class="checkbox small">
+                        Remember My Decision
+                        <input asp-for="RememberConsent">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            }
+
+            <br />
+            <div class="login-actions">
+                <button name="button" class="button accent-button" value="yes" autofocus>Yes, Allow</button>
+                <button name="button" class="button" value="no">No, Do Not Allow</button>
+            </div>
+        </form>
+    </div>
+</div>

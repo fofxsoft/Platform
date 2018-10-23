@@ -1,0 +1,267 @@
+﻿html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
+    background-color: #000;
+    background-image: url('/img/cross.svg');
+    background-repeat: repeat;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+    #app .container {
+        position: relative;
+        border-top: 130px #fff solid;
+        border-radius: 3px;
+        background: #fff;
+        box-shadow: 0 3px 1px -2px #000, 0 2px 5px 0 #000, 0 1px 5px 0 #000;
+    }
+
+    #app .title {
+        width: 380px;
+        height: 150px;
+        position: absolute;
+        top: -170px;
+        left: 35px;
+        background-color: #333;
+        border-radius: 3px;
+        box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: #fff;
+    }
+
+        #app .title h1 {
+            margin: 0;
+            font-size: 18pt;
+        }
+
+    #app .content {
+        width: 450px;
+        padding: 0 20px 10px 20px;
+    }
+
+        #app .content h1 {
+            width: 100%;
+            font-size: 18pt;
+            font-weight: 500;
+            margin: 0;
+            line-height: 18pt;
+            color: #333;
+        }
+
+            #app .content h1 small {
+                color: #777;
+            }
+
+        #app .content .alert,
+        #app .content .directions {
+            font-size: 10pt;
+            color: #333;
+            padding-top: 20px;
+        }
+
+    #app .scope {
+        margin-top: 10px;
+        font-size: 12pt;
+        color: #333;
+        font-weight: 500;
+    }
+
+    #app .logo {
+        width: 120px;
+    }
+
+    #app ul {
+        list-style-type: none;
+        margin: 10px 0;
+        padding: 0;
+        border-bottom: 1px #ccc solid;
+        border-top: 1px #ccc solid;
+        padding: 10px 3px 10px 3px;
+    }
+
+        #app ul li {
+            margin: 0;
+        }
+
+    #app form {
+        width: 100%;
+        padding: 0 20px 0 20px;
+    }
+
+        #app form fieldset {
+            width: 100%;
+            border: 0 none;
+            padding: 0;
+            margin: 0;
+        }
+
+            #app form fieldset label[for='Username'],
+            #app form fieldset label[for='Password'] {
+                display: block;
+                margin: 0 0 5px 0;
+                font-size: 0.8em;
+                color: #777;
+            }
+
+            #app form fieldset input[type='text'],
+            #app form fieldset input[type='password'] {
+                width: 100%;
+                padding: 15px;
+                font-size: 1.1em;
+                outline: none;
+                border-radius: 3px;
+                border: 1px #ccc solid;
+                margin: 0 0 20px 0;
+            }
+
+                #app form fieldset input[type='text']:focus,
+                #app form fieldset input[type='password']:focus {
+                    border: 1px #64dd17 solid;
+                    box-shadow: 0 0 5px #64dd17;
+                }
+
+        #app form .checkbox {
+            display: inline-block;
+            position: relative;
+            padding: 0 0 0 35px;
+            line-height: 25px;
+            font-size: 0.9em;
+            color: #777;
+            margin: 0 0 20px 0;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+            #app form .checkbox input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+                height: 0;
+                width: 0;
+            }
+
+            #app form .checkbox .checkmark {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 25px;
+                width: 25px;
+                border-radius: 3px;
+                border: 1px #ccc solid;
+            }
+
+            #app form .checkbox input:checked ~ .checkmark {
+                background-color: #64dd17;
+            }
+
+            #app form .checkbox input:focus ~ .checkmark {
+                border: 1px #64dd17 solid;
+                box-shadow: 0 0 5px #64dd17;
+            }
+
+            #app form .checkbox input:disabled ~ .checkmark {
+                background-color: #ccc;
+            }
+
+            #app form .checkbox .checkmark:after {
+                content: "";
+                position: absolute;
+                display: none;
+            }
+
+            #app form .checkbox input:checked ~ .checkmark:after {
+                display: block;
+            }
+
+            #app form .checkbox .checkmark:after {
+                left: 8px;
+                top: 4px;
+                width: 5px;
+                height: 10px;
+                border: solid #333;
+                border-width: 0 2px 2px 0;
+                -webkit-transform: rotate(45deg);
+                -ms-transform: rotate(45deg);
+                transform: rotate(45deg);
+            }
+
+            #app form .checkbox input:disabled ~ .checkmark:after {
+                border-color: #777;
+            }
+
+            #app form .checkbox.small {
+                padding: 0 0 0 25px;
+                line-height: 15px;
+                font-size: 0.8em;
+                font-weight: 500;
+                margin: 0 0 5px 0;
+            }
+
+                #app form .checkbox.small .checkmark {
+                    height: 15px;
+                    width: 15px;
+                }
+
+                    #app form .checkbox.small .checkmark:after {
+                        left: 4px;
+                        top: 1px;
+                        width: 3px;
+                        height: 6px;
+                    }
+
+        #app form .login-actions {
+            padding: 0 0 10px 0;
+        }
+
+        #app form .button {
+            width: 100%;
+            border: 0 none;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px #ccc solid;
+            color: #333;
+            font-weight: 500;
+            font-size: 1.1em;
+            background-color: #fff;
+            border-radius: 3px;
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+            cursor: pointer;
+        }
+
+            #app form .button:hover {
+                color: #000;
+            }
+
+            #app form .button:focus {
+                outline: 0 none;
+            }
+
+        #app form .accent-button {
+            border: 1px #64dd17 solid;
+            background-color: #64dd17;
+        }
+
+            #app form .accent-button:hover {
+                color: #000;
+            }

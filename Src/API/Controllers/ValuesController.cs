@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace PlatformOne.API.Controllers
 {
 
-    [Route("api/[controller]")]
+    [Route("api/values")]
     [ApiController]
     [Authorize]
     public class ValuesController : ControllerBase

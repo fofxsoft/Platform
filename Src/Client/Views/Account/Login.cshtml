@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Account";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form action="https://localhost:5000/account/login/" method="post" autocomplete="off">
+    <input type="hidden" id="ReturnUrl" name="ReturnUrl" value="https://localhost:5002/account/" />
+
+    <fieldset>
+        <div>
+            <label for="Username"></label>
+            <input placeholder="Username" id="Username" name="Username" autofocus autocomplete="off" />
+        </div>
+
+        <div>
+            <label for="Password"></label>
+            <input type="password" placeholder="Password" id="Password" name="Password" autocomplete="off" />
+        </div>
+
+        <div>
+            <label>
+                Remember Me
+                <input type="checkbox" id="RememberLogin" name="RememberLogin" value="true">
+            </label>
+        </div>
+    </fieldset>
+
+    <button name="button" value="login">Login</button>
+</form>
