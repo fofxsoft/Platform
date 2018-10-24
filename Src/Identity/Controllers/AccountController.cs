@@ -38,9 +38,9 @@ namespace Identity.Controllers
 
         [Route("login")]
         [HttpGet]
-        public async Task<IActionResult> Login(string returnUrl)
+        public async Task<IActionResult> GetLogin(string returnUrl)
         {
-            LoginModel vm = await BuildLoginAsync(returnUrl);
+            LoginModel vm = await CreateLoginAsync(returnUrl);
 
             if (vm.IsExternalLoginOnly)
             {
@@ -53,7 +53,7 @@ namespace Identity.Controllers
         [Route("login")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Authenticate(CredentialsModel model, string button)
+        public async Task<IActionResult> PostLogin(CredentialsModel model, string button)
         {
             AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
 
@@ -126,22 +126,22 @@ namespace Identity.Controllers
                 ModelState.AddModelError("", Config.InvalidCredentialsErrorMessage);
             }
 
-            return View("Index", await BuildLoginAsync(model));
+            return View("Index", await CreateLoginAsync(model));
         }
 
         [Route("logout")]
         [HttpGet]
-        public async Task<IActionResult> Logout(string logoutId)
+        public async Task<IActionResult> GetLogout(string logoutId)
         {
-            return await Destroy(logoutId);
+            return await PostLogout(logoutId);
         }
     
         [Route("logout")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Destroy(string logoutId)
+        public async Task<IActionResult> PostLogout(string logoutId)
         {
-            RedirectModel redirect = await BuildRedirectAsync(logoutId);
+            RedirectModel redirect = await CreateRedirectAsync(logoutId);
 
             if (User?.Identity.IsAuthenticated == true)
             {
@@ -163,7 +163,7 @@ namespace Identity.Controllers
             return Redirect(!string.IsNullOrWhiteSpace(redirect.RedirectUri) ? redirect.RedirectUri : "/");
         }
 
-        private async Task<LoginModel> BuildLoginAsync(string returnUrl)
+        private async Task<LoginModel> CreateLoginAsync(string returnUrl)
         {
             AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(returnUrl);
 
@@ -220,9 +220,9 @@ namespace Identity.Controllers
             };
         }
 
-        private async Task<LoginModel> BuildLoginAsync(CredentialsModel model)
+        private async Task<LoginModel> CreateLoginAsync(CredentialsModel model)
         {
-            LoginModel vm = await BuildLoginAsync(model.ReturnUrl);
+            LoginModel vm = await CreateLoginAsync(model.ReturnUrl);
 
             vm.Username = model.Username;
             vm.RememberLogin = model.RememberLogin;
@@ -230,7 +230,7 @@ namespace Identity.Controllers
             return vm;
         }
 
-        private async Task<RedirectModel> BuildRedirectAsync(string logoutId)
+        private async Task<RedirectModel> CreateRedirectAsync(string logoutId)
         {
             LogoutRequest logout = await _interaction.GetLogoutContextAsync(logoutId);
 

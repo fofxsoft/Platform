@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Drawing;
 
 namespace PlatformOne.API.Controllers
 {
 
-    [Route("api/values")]
+    [Route("api")]
     [ApiController]
     [Authorize]
     public class ValuesController : ControllerBase
     {
 
+        [Route("values")]
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
         {
@@ -23,10 +23,14 @@ namespace PlatformOne.API.Controllers
             };
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        [Route("value/{id}")]
+        [HttpGet]
+        public ActionResult<IEnumerable<string>> Get(int id)
         {
-            return "value" + id;
+            return new string[]
+            {
+                "value" + id
+            };
         }
 
         [Route("distance")]

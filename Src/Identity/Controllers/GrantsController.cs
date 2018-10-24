@@ -8,16 +8,14 @@ using Microsoft.AspNetCore.Authorization;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;
 using Identity.Models;
-using IdentityServer4.Models;
 
 namespace Identity.Controllers
 {
 
     [Route("grants")]
     [SecurityHeaders]
-    [ApiController]
     [Authorize]
-    public class GrantsController : ControllerBase
+    public class GrantsController : Controller
     {
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clients;
@@ -33,19 +31,35 @@ namespace Identity.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GrantModel>>> Get()
+        public async Task<IActionResult> GetIndex()
         {
-            List<GrantModel> grants = new List<GrantModel>();
+            return View("Index", await CreateGrantsAsync());
+        }
 
-            foreach (Consent grant in await _interaction.GetAllUserConsentsAsync())
+        [Route("revoke")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PostRevoke(string clientId)
+        {
+            await _interaction.RevokeUserConsentAsync(clientId);
+            await _events.RaiseAsync(new GrantsRevokedEvent(User.GetSubjectId(), clientId));
+
+            return Redirect("/grants");
+        }
+
+        private async Task<GrantsModel> CreateGrantsAsync()
+        {
+            var grants = new List<GrantModel>();
+
+            foreach (var grant in await _interaction.GetAllUserConsentsAsync())
             {
-                Client client = await _clients.FindClientByIdAsync(grant.ClientId);
+                var client = await _clients.FindClientByIdAsync(grant.ClientId);
 
                 if (client != null)
                 {
-                    Resources resources = await _resources.FindResourcesByScopeAsync(grant.Scopes);
+                    var resources = await _resources.FindResourcesByScopeAsync(grant.Scopes);
 
-                    GrantModel item = new GrantModel()
+                    grants.Add(new GrantModel()
                     {
                         ClientId = client.ClientId,
                         ClientName = client.ClientName ?? client.ClientId,
@@ -53,23 +67,16 @@ namespace Identity.Controllers
                         ClientUrl = client.ClientUri,
                         Created = grant.CreationTime,
                         Expires = grant.Expiration,
-                        IdentityGrantNames = resources.IdentityResources.Select(x => x.DisplayName ?? x.Name).ToArray(),
-                        ApiGrantNames = resources.ApiResources.Select(x => x.DisplayName ?? x.Name).ToArray()
-                    };
-
-                    grants.Add(item);
+                        IdentityGrantNames = resources.IdentityResources.Select(x => x.Description ?? x.DisplayName ?? x.Name).ToArray(),
+                        ApiGrantNames = resources.ApiResources.Select(x => x.Description ?? x.DisplayName ?? x.Name).ToArray()
+                    });
                 }
             }
 
-            return grants;
-        }
-
-        [HttpDelete("{id}")]
-        [ValidateAntiForgeryToken]
-        public async void Delete(string id)
-        {
-            await _interaction.RevokeUserConsentAsync(id);
-            await _events.RaiseAsync(new GrantsRevokedEvent(User.GetSubjectId(), id));
+            return new GrantsModel
+            {
+                Grants = grants
+            };
         }
     }
 }

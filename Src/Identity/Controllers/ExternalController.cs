@@ -40,7 +40,7 @@ namespace Identity.Controllers
 
         [Route("challenge")]
         [HttpGet]
-        public async Task<IActionResult> Challenge(string provider, string returnUrl)
+        public async Task<IActionResult> GetChallenge(string provider, string returnUrl)
         {
             if (string.IsNullOrEmpty(returnUrl)) returnUrl = "~/";
 
@@ -57,7 +57,7 @@ namespace Identity.Controllers
             {
                 AuthenticationProperties props = new AuthenticationProperties
                 {
-                    RedirectUri = Url.Action(nameof(Callback)),
+                    RedirectUri = Url.Action(nameof(GetCallback)),
                     Items =
                     {
                         {
@@ -77,7 +77,7 @@ namespace Identity.Controllers
 
         [Route("callback")]
         [HttpGet]
-        public async Task<IActionResult> Callback()
+        public async Task<IActionResult> GetCallback()
         {
             AuthenticateResult result = await HttpContext.AuthenticateAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
@@ -86,7 +86,7 @@ namespace Identity.Controllers
                 throw new Exception("External authentication error");
             }
 
-            (TestUser user, string provider, string providerUserId, IEnumerable <Claim> claims) = FindUserFromExternalProvider(result);
+            (TestUser user, string provider, string providerUserId, IEnumerable <Claim> claims) = FindUserByExternalProvider(result);
 
             if (user == null)
             {
@@ -96,9 +96,9 @@ namespace Identity.Controllers
             List<Claim> additionalLocalClaims = new List<Claim>();
             AuthenticationProperties localSignInProps = new AuthenticationProperties();
 
-            ProcessLoginCallbackForOidc(result, additionalLocalClaims, localSignInProps);
-            ProcessLoginCallbackForWsFed(result, additionalLocalClaims, localSignInProps);
-            ProcessLoginCallbackForSaml2p(result, additionalLocalClaims, localSignInProps);
+            ProcessLoginCallbackOidc(result, additionalLocalClaims, localSignInProps);
+            ProcessLoginCallbackWsFed(result, additionalLocalClaims, localSignInProps);
+            ProcessLoginCallbackSaml2p(result, additionalLocalClaims, localSignInProps);
 
             await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.SubjectId, user.Username));
 
@@ -157,7 +157,7 @@ namespace Identity.Controllers
             }
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
+        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserByExternalProvider(AuthenticateResult result)
         {
             ClaimsPrincipal externalUser = result.Principal;
             Claim userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ?? externalUser.FindFirst(ClaimTypes.NameIdentifier) ?? throw new Exception("Unknown userid");
@@ -178,7 +178,7 @@ namespace Identity.Controllers
             return _users.AutoProvisionUser(provider, providerUserId, claims.ToList());
         }
 
-        private void ProcessLoginCallbackForOidc(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
+        private void ProcessLoginCallbackOidc(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
         {
             Claim sid = externalResult.Principal.Claims.FirstOrDefault(x => x.Type == JwtClaimTypes.SessionId);
 
@@ -195,11 +195,11 @@ namespace Identity.Controllers
             }
         }
 
-        private void ProcessLoginCallbackForWsFed(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
+        private void ProcessLoginCallbackWsFed(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
         {
         }
 
-        private void ProcessLoginCallbackForSaml2p(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
+        private void ProcessLoginCallbackSaml2p(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
         {
         }
     }

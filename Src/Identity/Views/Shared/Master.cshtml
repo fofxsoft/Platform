@@ -1,0 +1,28 @@
+﻿@{
+    Layout = "Layout";
+}
+
+<section id="main">
+
+    @await Html.PartialAsync("Header")
+
+    <section id="body">
+        @RenderBody()
+    </section>
+</section>
+
+@section preload {
+    <link href=~/css/master.css rel="preload" as="style" />
+
+    @RenderSection("preload", required: false)
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/css/master.css" />
+
+    @RenderSection("styles", required: false)
+}
+
+@section scripts {
+    @RenderSection("scripts", required: false)
+}

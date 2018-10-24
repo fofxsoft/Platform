@@ -35,13 +35,13 @@ namespace Identity.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(string returnUrl)
+        public async Task<IActionResult> GetIndex(string returnUrl)
         {
-            ConsentModel vm = await BuildConsentAsync(returnUrl);
+            ConsentModel consents = await CreateConsentsAsync(returnUrl);
 
-            if (vm != null)
+            if (consents != null)
             {
-                return View("Index", vm);
+                return View("Index", consents);
             }
 
             return View("Error");
@@ -49,9 +49,9 @@ namespace Identity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Post(ResourceModel model)
+        public async Task<IActionResult> PostIndex(ResourceModel model)
         {
-            PermissionModel result = await ProcessConsent(model);
+            PermissionModel result = await ProcessConsentAsync(model);
 
             if (result.IsRedirect)
             {
@@ -76,7 +76,7 @@ namespace Identity.Controllers
             return View("Error");
         }
 
-        private async Task<PermissionModel> ProcessConsent(ResourceModel model)
+        private async Task<PermissionModel> ProcessConsentAsync(ResourceModel model)
         {
             PermissionModel result = new PermissionModel();
             AuthorizationRequest request = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
@@ -127,13 +127,13 @@ namespace Identity.Controllers
             }
             else
             {
-                result.ViewModel = await BuildConsentAsync(model.ReturnUrl, model);
+                result.ViewModel = await CreateConsentsAsync(model.ReturnUrl, model);
             }
 
             return result;
         }
 
-        private async Task<ConsentModel> BuildConsentAsync(string returnUrl, ResourceModel model = null)
+        private async Task<ConsentModel> CreateConsentsAsync(string returnUrl, ResourceModel model = null)
         {
             AuthorizationRequest request = await _interaction.GetAuthorizationContextAsync(returnUrl);
 
@@ -169,7 +169,7 @@ namespace Identity.Controllers
 
         private ConsentModel CreateConsent(ResourceModel model, string returnUrl, AuthorizationRequest request, Client client, Resources resources)
         {
-            ConsentModel vm = new ConsentModel
+            ConsentModel consent = new ConsentModel
             {
                 ScopesConsented = model?.ScopesConsented ?? Enumerable.Empty<string>(),
 
@@ -180,24 +180,24 @@ namespace Identity.Controllers
                 ClientLogoUrl = client.LogoUri
             };
 
-            vm.IdentityScopes = resources.IdentityResources.Select(x => CreateScope(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
-            vm.ResourceScopes = resources.ApiResources.SelectMany(x => x.Scopes).Select(x => CreateScope(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            consent.IdentityScopes = resources.IdentityResources.Select(x => CreateScope(x, consent.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            consent.ResourceScopes = resources.ApiResources.SelectMany(x => x.Scopes).Select(x => CreateScope(x, consent.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
 
             if (resources.OfflineAccess)
             {
-                vm.ResourceScopes = vm.ResourceScopes.Union(new ScopeModel[] {
+                consent.ResourceScopes = consent.ResourceScopes.Union(new ScopeModel[] {
                     new ScopeModel
                     {
                         Name = IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess,
                         DisplayName = Config.OfflineAccessDisplayName,
                         Description = Config.OfflineAccessDescription,
                         Emphasize = true,
-                        Checked = (vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null)
+                        Checked = (consent.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null)
                     }
                 });
             }
 
-            return vm;
+            return consent;
         }
 
         private ScopeModel CreateScope(IdentityResource identity, bool check)

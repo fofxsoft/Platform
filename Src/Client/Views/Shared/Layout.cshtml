@@ -19,10 +19,12 @@
     @if (User.Identity.IsAuthenticated)
     {
         <a asp-area="" asp-controller="account" asp-action="">Account</a><br />
+        <a asp-area="" asp-controller="client" asp-action="">Client</a><br />
         <a asp-area="" asp-controller="account" asp-action="logout">Logout</a><br />
     }
     else
     {
+        <a asp-area="" asp-controller="client" asp-action="">Client</a><br />
         <a asp-area="" asp-controller="account" asp-action="">Login</a><br />
     }
 

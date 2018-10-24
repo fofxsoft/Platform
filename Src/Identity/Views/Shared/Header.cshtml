@@ -1,0 +1,22 @@
+﻿<header id="header">
+    <div class="left">
+        <a asp-area="" asp-controller="" asp-action="" class="button">
+            <img src="/img/header-logo.svg" />
+        </a>
+    </div>
+
+    <div class="right">
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a asp-area="" asp-controller="grants" asp-action="" class="button">Grants</a><br />
+            <a asp-area="" asp-controller="diagnostics" asp-action="" class="button">Diagnostics</a>
+            <a asp-area="" asp-controller="account" asp-action="logout" class="button">Sign Out</a>
+        }
+        else
+        {
+            <a asp-area="" asp-controller="account" asp-action="login" class="button">Sign In</a>
+        }
+
+    </div>
+</header>

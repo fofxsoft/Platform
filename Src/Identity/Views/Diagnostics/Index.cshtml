@@ -1,0 +1,53 @@
+﻿@using Newtonsoft.Json
+
+@model DiagnosticsModel
+
+@{
+    Layout = "Master";
+}
+
+<div class="columns">
+    <div>
+        <h1>Identity Diagnostics</h1>
+    </div>
+
+    <div class="scroll">
+        <div class="card">
+            <div class="title">
+                Properties
+            </div>
+
+            <div class="body">
+                <pre>@JsonConvert.SerializeObject(Model.AuthenticateResult.Properties.Items, Formatting.Indented, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore })</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="title">
+                Clients
+            </div>
+
+            <div class="body">
+                <pre>@JsonConvert.SerializeObject(Model.Clients, Formatting.Indented, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore })</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="title">
+                Claims
+            </div>
+
+            <div class="body">
+                <pre>@JsonConvert.SerializeObject(Model.AuthenticateResult.Principal.Claims, Formatting.Indented, new JsonSerializerSettings(){ ReferenceLoopHandling = ReferenceLoopHandling.Ignore })</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section preload {
+    <link href=~/css/diagnostics.css rel="preload" as="style" />
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/css/diagnostics.css" />
+}

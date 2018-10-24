@@ -31,7 +31,9 @@ namespace Identity
         {
             return new List<ApiResource>
             {
-                new ApiResource("api", "API"),
+                new ApiResource("api", "API") {
+                    Description = "Platform API"
+                }
             };
         }
 
@@ -75,8 +77,13 @@ namespace Identity
                 {
                     ClientId = "interface",
                     ClientName = "Encompass",
-                    AllowedGrantTypes = GrantTypes.Implicit,
+                    AllowedGrantTypes = GrantTypes.HybridAndClientCredentials,
                     RequireConsent = false,
+
+                    ClientSecrets =
+                    {
+                        new Secret("secret".Sha256())
+                    },
 
                     RedirectUris =
                     {
@@ -91,8 +98,12 @@ namespace Identity
                     AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile
-                    }
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "api",
+                        "account"
+                    },
+
+                    AllowOfflineAccess = true
                 }
             };
         }

@@ -218,7 +218,7 @@ namespace Console
 
                 if (start != null && end != null)
                 {
-                    System.Console.WriteLine("\n" + await GetResults("https://localhost:5001/api/values/distance/?x1=" + start.X + "&y1=" + start.Y + "&x2=" + end.X + "&y2=" + end.Y, accessToken) + "\n");
+                    System.Console.WriteLine("\n" + await GetResults("https://localhost:5001/api/distance/?x1=" + start.X + "&y1=" + start.Y + "&x2=" + end.X + "&y2=" + end.Y, accessToken) + "\n");
                 }
             }
         }

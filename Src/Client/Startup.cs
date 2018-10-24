@@ -24,9 +24,17 @@ namespace Client
               {
                   options.SignInScheme = "Cookies";
                   options.Authority = "https://localhost:5000";
-                  options.RequireHttpsMetadata = false;
+                  options.RequireHttpsMetadata = true;
+
                   options.ClientId = "interface";
+                  options.ClientSecret = "secret";
+                  options.ResponseType = "code id_token";
+
                   options.SaveTokens = true;
+                  options.GetClaimsFromUserInfoEndpoint = true;
+
+                  options.Scope.Add("api");
+                  options.Scope.Add("offline_access");
 
                   options.Events = new OpenIdConnectEvents
                   {

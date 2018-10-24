@@ -1,62 +1,56 @@
 ﻿@model LoginModel
 
-<section>
-    <div class="title">
-        <img class="logo" src="~/img/logo.svg" />
-    </div>
+@{
+    Layout = "Locked";
+}
 
-    <div class="content">
+@if (Model.EnableLocalLogin)
+{
+    <form asp-route="Login" autocomplete="off">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <fieldset>
+            <div>
+                <label asp-for="Username"></label>
+                <input placeholder="Username" asp-for="Username" autofocus autocomplete="off">
+            </div>
 
-        @if (Model.EnableLocalLogin)
-        {
-            <form asp-route="Login" autocomplete="off">
-                <input type="hidden" asp-for="ReturnUrl" />
+            <div>
+                <label asp-for="Password"></label>
+                <input type="password" placeholder="Password" asp-for="Password" autocomplete="off">
+            </div>
 
-                <fieldset>
-                    <div>
-                        <label asp-for="Username"></label>
-                        <input placeholder="Username" asp-for="Username" autofocus autocomplete="off">
-                    </div>
+            <div>
+                <label class="checkbox">
+                    Remember Me
+                    <input asp-for="RememberLogin">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+        </fieldset>
 
-                    <div>
-                        <label asp-for="Password"></label>
-                        <input type="password" placeholder="Password" asp-for="Password" autocomplete="off">
-                    </div>
+        <div class="login-actions">
+            <button name="button" class="button accent" value="login">Sign In</button>
 
-                    <div>
-                        <label class="checkbox">
-                            Remember Me
-                            <input asp-for="RememberLogin">
-                            <span class="checkmark"></span>
-                        </label>
-                    </div>
-                </fieldset>
-                <div class="login-actions">
-                    <button name="button" class="button accent-button" value="login">Login</button>
-                </div>
-            </form>
-        }
-
-        @if (Model.VisibleExternalProviders.Any())
-        {
-            <ul>
-
+            @if (Model.VisibleExternalProviders.Any())
+            {
                 @foreach (var provider in Model.VisibleExternalProviders)
                 {
-                    <li>
-                        <a asp-controller="External" asp-action="Challenge" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl">@provider.DisplayName</a>
-                    </li>
+                    @switch (@provider.AuthenticationScheme)
+                    {
+                        case "Google":
+                            <a class="button" asp-controller="External" asp-action="Challenge" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl"><img src="~/img/google.svg" />Sign in with Google</a>
+                            break;
+                    }
                 }
+            }
 
-            </ul>
-        }
+        </div>
+    </form>
+}
 
-        @if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
-        {
-            <div>
-                <strong>Invalid login request</strong> There are no login schemes configured for this client.
-            </div>
-        }
-
+@if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
+{
+    <div>
+        <strong>Invalid login request</strong> There are no login schemes configured for this client.
     </div>
-</section>
+}

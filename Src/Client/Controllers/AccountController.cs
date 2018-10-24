@@ -12,16 +12,14 @@ namespace Client.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult Account()
+        public IActionResult GetIndex()
         {
-            ViewData["Message"] = "Secure page.";
-
             return View("Index");
         }
 
         [Route("logout")]
         [HttpGet]
-        public async Task Logout()
+        public async Task GetLogout()
         {
             await HttpContext.SignOutAsync("Cookies");
             await HttpContext.SignOutAsync("oidc");

@@ -8,7 +8,7 @@ namespace Client.Controllers
     {
 
         [HttpGet]
-        public IActionResult Public()
+        public IActionResult GetIndex()
         {
             return View("Index");
         }

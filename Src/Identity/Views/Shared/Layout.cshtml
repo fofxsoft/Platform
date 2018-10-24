@@ -10,11 +10,16 @@
     <title>f(X) Identity</title>
 
     <link href=~/css/site.css rel="preload" as="style" />
+
+    @RenderSection("preload", required: false)
+
     <link rel="stylesheet" href="~/css/site.css" />
+
+    @RenderSection("styles", required: false)
 </head>
 
 <body>
-    <div id="auth">
+    <div id="app">
         @RenderBody()
     </div>
 

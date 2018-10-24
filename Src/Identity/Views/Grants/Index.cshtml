@@ -1,0 +1,84 @@
+﻿@model GrantsModel
+
+@{
+    Layout = "Master";
+}
+
+<div class="columns">
+    <div>
+        <h1>Application Access</h1>
+
+        <p>
+            Keep track of which apps or services you gave permission to access your account, and remove the ones you no longer use or trust.
+        </p>
+    </div>
+
+    <div class="scroll">
+
+        @if (Model.Grants.Any())
+        {
+            foreach (var grant in Model.Grants)
+            {
+                <div class="card">
+                    <div class="title">
+                        @grant.ClientName
+                    </div>
+
+                    <div class="body">
+                        <div>
+                            Created: @grant.Created.ToString("M/d/yyyy")
+                        </div>
+
+                        @if (grant.Expires.HasValue)
+                        {
+                            <div>
+                                Expires: @grant.Expires.Value.ToString("M/d/yyyy")
+                            </div>
+                        }
+
+                        <br />
+
+                        @grant.ClientName has access to;
+
+                        <ul>
+
+                            @if (grant.IdentityGrantNames.Any())
+                            {
+                                @foreach (var name in grant.IdentityGrantNames)
+                                {
+                                    <li>@name</li>
+                                }
+                            }
+
+                            @if (grant.ApiGrantNames.Any())
+                            {
+                                @foreach (var name in grant.ApiGrantNames)
+                                {
+                                    <li>@name</li>
+                                }
+                            }
+
+                        </ul>
+                    </div>
+
+                    <form asp-action="Revoke">
+                        <input type="hidden" name="clientId" value="@grant.ClientId">
+
+                        <div class="actions">
+                            <button class="button danger">Revoke Access</button>
+                        </div>
+                    </form>
+                </div>
+            }
+        }
+
+    </div>
+</div>
+
+@section preload {
+    <link href=~/css/grants.css rel="preload" as="style" />
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/css/grants.css" />
+}

@@ -1,0 +1,29 @@
+﻿@{
+    Layout = "Layout";
+}
+
+<section>
+    <div class="title">
+        <img class="logo" src="~/img/logo.svg" />
+    </div>
+
+    <div class="content">
+        @RenderBody()
+    </div>
+</section>
+
+@section preload {
+    <link href=~/css/locked.css rel="preload" as="style" />
+
+    @RenderSection("preload", required: false)
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/css/locked.css" />
+
+    @RenderSection("styles", required: false)
+}
+
+@section scripts {
+    @RenderSection("scripts", required: false)
+}
