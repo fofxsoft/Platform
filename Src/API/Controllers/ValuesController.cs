@@ -34,6 +34,7 @@ namespace PlatformOne.API.Controllers
         }
 
         [Route("distance")]
+        [Authorize(Policy = "Users")]
         [HttpGet]
         public ActionResult<IEnumerable<double>> Distance(double x1, double y1, double x2, double y2)
         {

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace PlatformOne.API
@@ -28,6 +30,16 @@ namespace PlatformOne.API
                         options.Authority = "https://localhost:5000";
                         options.RequireHttpsMetadata = false;
                         options.ApiName = "api";
+                        options.EnableCaching = true;
+                        options.CacheDuration = TimeSpan.FromMinutes(10);
+                    });
+
+            services.AddAuthorization(options =>
+                    {
+                        options.AddPolicy("Users", builder =>
+                        {
+                            builder.RequireScope("profile");
+                        });
                     });
 
             services.AddCors(options =>
