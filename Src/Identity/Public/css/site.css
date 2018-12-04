@@ -67,8 +67,7 @@ input[type='password'] {
 
     input[type='text']:focus,
     input[type='password']:focus {
-        border: 1px #64dd17 solid;
-        box-shadow: 0 0 5px #64dd17;
+        border: 1px #3366cc solid;
     }
 
 .button {
@@ -111,8 +110,9 @@ input[type='password'] {
     }
 
     .button.accent {
-        border: 1px #64dd17 solid;
-        background-color: #64dd17;
+        border: 1px #3366cc solid;
+        background-color: #3366cc;
+        color: #fff;
     }
 
         .button.accent:hover {
@@ -160,15 +160,15 @@ input[type='password'] {
         width: 25px;
         border-radius: 3px;
         border: 1px #ccc solid;
+        background: #fff;
     }
 
     .checkbox input:checked ~ .checkmark {
-        background-color: #64dd17;
+        background-color: #3366cc;
     }
 
     .checkbox input:focus ~ .checkmark {
-        border: 1px #64dd17 solid;
-        box-shadow: 0 0 5px #64dd17;
+        border: 1px #3366cc solid;
     }
 
     .checkbox input:disabled ~ .checkmark {
@@ -190,7 +190,7 @@ input[type='password'] {
         top: 4px;
         width: 5px;
         height: 10px;
-        border: solid #333;
+        border: solid #fff;
         border-width: 0 2px 2px 0;
         -webkit-transform: rotate(45deg);
         -ms-transform: rotate(45deg);

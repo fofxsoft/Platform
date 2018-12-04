@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Net;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 namespace Client
@@ -14,6 +15,13 @@ namespace Client
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                   .UseKestrel(options =>
+                   {
+                       options.Listen(IPAddress.Loopback, 5002, listenOptions =>
+                       {
+                           listenOptions.UseHttps("certificate.pfx", "Marvin");
+                       });
+                   })
                    .UseWebRoot("Public")
                    .UseStartup<Startup>();
 
