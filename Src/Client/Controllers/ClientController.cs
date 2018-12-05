@@ -10,7 +10,7 @@ namespace Client.Controllers
     {
 
         [HttpGet]
-        public async Task<IActionResult> GetIndex()
+        public async Task<IActionResult> GetIndex(int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0)
         {
             string accessToken = "";
 
@@ -20,8 +20,8 @@ namespace Client.Controllers
             }
 
             ViewData["Values"] = await Http.GetJArrayAsync("https://localhost:5001/api/values", accessToken);
-            ViewData["Value"] = await Http.GetJArrayAsync("https://localhost:5001/api/value/123456", accessToken);
-            ViewData["Distance"] = await Http.GetJArrayAsync("https://localhost:5001/api/distance/?x1=1&y1=4&x2=52&y2=85", accessToken);
+            ViewData["Value"] = await Http.GetJArrayAsync("https://localhost:5001/api/value/" + x1 + y1 + x2 + y2, accessToken);
+            ViewData["Distance"] = await Http.GetJArrayAsync("https://localhost:5001/api/distance/?x1=" + x1 + "&y1=" + y1 + "&x2=" + x2 + "&y2=" + y2, accessToken);
 
             return View("Index");
         }

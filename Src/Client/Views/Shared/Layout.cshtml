@@ -16,14 +16,14 @@
 
     @if (User.Identity.IsAuthenticated)
     {
-        <a asp-area="" asp-controller="account" asp-action="">Account</a><br />
-        <a asp-area="" asp-controller="client" asp-action="">Client</a><br />
+        <a asp-area="" asp-controller="account" asp-action="" asp-route-x1="1" asp-route-y1="4" asp-route-x2="52" asp-route-y2="85">Account</a><br />
+        <a asp-area="" asp-controller="client" asp-action="" asp-route-x1="1" asp-route-y1="4" asp-route-x2="2" asp-route-y2="7">Client</a><br />
         <a asp-area="" asp-controller="account" asp-action="logout">Logout</a><br />
     }
     else
     {
-        <a asp-area="" asp-controller="client" asp-action="">Client</a><br />
-        <a asp-area="" asp-controller="account" asp-action="">Login</a><br />
+        <a asp-area="" asp-controller="client" asp-action="" asp-route-x1="1" asp-route-y1="4" asp-route-x2="2" asp-route-y2="7">Client</a><br />
+        <a asp-area="" asp-controller="account" asp-action="" asp-route-x1="1" asp-route-y1="4" asp-route-x2="52" asp-route-y2="85">Login</a><br />
     }
 
     <br />

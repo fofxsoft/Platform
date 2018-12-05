@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
@@ -9,6 +10,16 @@ namespace Client
 {
     public class Startup
     {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration
+        {
+            get;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
@@ -23,11 +34,11 @@ namespace Client
               .AddOpenIdConnect("oidc", options =>
               {
                   options.SignInScheme = "Cookies";
-                  options.Authority = "https://localhost:5000";
+                  options.Authority = Configuration.GetSection("Authentication").GetValue<string>("Authority");
                   options.RequireHttpsMetadata = true;
 
-                  options.ClientId = "interface";
-                  options.ClientSecret = "secret";
+                  options.ClientId = Configuration.GetSection("Authentication").GetValue<string>("ClientID");
+                  options.ClientSecret = Configuration.GetSection("Authentication").GetValue<string>("ClientSecret");
                   options.ResponseType = "code id_token";
 
                   options.SaveTokens = true;

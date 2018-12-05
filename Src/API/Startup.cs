@@ -27,7 +27,7 @@ namespace PlatformOne.API
             services.AddAuthentication("Bearer")
                     .AddIdentityServerAuthentication(options =>
                     {
-                        options.Authority = "https://localhost:5000";
+                        options.Authority = Configuration.GetSection("Authentication").GetValue<string>("Authority");
                         options.RequireHttpsMetadata = false;
                         options.ApiName = "api";
                         options.EnableCaching = true;
