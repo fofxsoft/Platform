@@ -13,6 +13,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Identity.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Controllers
 {
@@ -20,16 +21,17 @@ namespace Identity.Controllers
     [Route("account")]
     public class AccountController : Controller
     {
-        private readonly TestUserStore _users;
+        private readonly UserManager<UserModel> _userManager;
+        private readonly SignInManager<UserModel> _signInManager;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
 
-        public AccountController(IIdentityServerInteractionService interaction, IClientStore clientStore, IAuthenticationSchemeProvider schemeProvider, IEventService events, TestUserStore users = null)
+        public AccountController(UserManager<UserModel> userManager, SignInManager<UserModel> signInManager, IIdentityServerInteractionService interaction, IClientStore clientStore, IAuthenticationSchemeProvider schemeProvider, IEventService events)
         {
-            _users = users ?? new TestUserStore(TestUsers.Users);
-
+            _userManager = userManager;
+            _signInManager = signInManager;
             _interaction = interaction;
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
@@ -55,18 +57,13 @@ namespace Identity.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PostLogin(CredentialsModel model, string button)
         {
-            AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
-
             if (button != "login")
             {
+                AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+
                 if (context != null)
                 {
                     await _interaction.GrantConsentAsync(context, ConsentResponse.Denied);
-
-                    if (await _clientStore.IsPkceClientAsync(context.ClientId))
-                    {
-                        return Redirect(model.ReturnUrl);
-                    }
 
                     return Redirect(model.ReturnUrl);
                 }
@@ -78,52 +75,25 @@ namespace Identity.Controllers
 
             if (ModelState.IsValid)
             {
-                if (_users.ValidateCredentials(model.Username, model.Password))
+                Microsoft.AspNetCore.Identity.SignInResult result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+
+                if (result.Succeeded)
                 {
-                    TestUser user = _users.FindByUsername(model.Username);
+                    UserModel user = await _userManager.FindByNameAsync(model.Username);
 
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username));
+                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
 
-                    AuthenticationProperties props = null;
-
-                    if (model.RememberLogin)
-                    {
-                        props = new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.Add(Config.RememberMeLoginDuration)
-                        };
-                    };
-
-                    await HttpContext.SignInAsync(user.SubjectId, user.Username, props);
-
-                    if (context != null)
-                    {
-                        if (await _clientStore.IsPkceClientAsync(context.ClientId))
-                        {
-                            return Redirect(model.ReturnUrl);
-                        }
-
-                        return Redirect(model.ReturnUrl);
-                    }
-
-                    if (Url.IsLocalUrl(model.ReturnUrl))
+                    if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
                     {
                         return Redirect(model.ReturnUrl);
                     }
-                    else if (string.IsNullOrEmpty(model.ReturnUrl))
-                    {
-                        return Redirect("~/");
-                    }
-                    else
-                    {
-                        throw new Exception("invalid return URL");
-                    }
+
+                    return Redirect("~/");
                 }
 
                 await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
 
-                ModelState.AddModelError("", Config.InvalidCredentialsErrorMessage);
+                ModelState.AddModelError("", "Invalid username or password");
             }
 
             return View("Index", await CreateLoginAsync(model));
@@ -135,7 +105,7 @@ namespace Identity.Controllers
         {
             return await PostLogout(logoutId);
         }
-    
+
         [Route("logout")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -145,7 +115,7 @@ namespace Identity.Controllers
 
             if (User?.Identity.IsAuthenticated == true)
             {
-                await HttpContext.SignOutAsync();
+                await _signInManager.SignOutAsync();
                 await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
             }
 

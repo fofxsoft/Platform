@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
@@ -8,9 +9,23 @@ namespace Identity
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build()
-                                      .Run();
+            var seed = args.Contains("/seed");
 
+            if (seed)
+            {
+                args = args.Except(new[] {"/seed"}).ToArray();
+            }
+
+            var host = CreateWebHostBuilder(args).Build();
+
+            if (seed)
+            {
+                SeedData.EnsureSeedData(host.Services);
+
+                return;
+            }
+
+            host.Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
