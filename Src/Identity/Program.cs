@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System.IO;
 using System.Net;
+using System.Linq;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace Identity
 {
@@ -16,7 +18,12 @@ namespace Identity
                 args = args.Except(new[] {"/seed"}).ToArray();
             }
 
-            var host = CreateWebHostBuilder(args).Build();
+            IConfiguration config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                                                              .AddJsonFile("appsettings.json", optional: false)
+                                                              .AddCommandLine(args)
+                                                              .Build();
+
+            IWebHost host = CreateWebHostBuilder(args, config).Build();
 
             if (seed)
             {
@@ -28,13 +35,15 @@ namespace Identity
             host.Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args, IConfiguration config) =>
             WebHost.CreateDefaultBuilder(args)
                    .UseKestrel(options =>
                    {
                        options.Listen(IPAddress.Loopback, 5000, listenOptions =>
                        {
-                           listenOptions.UseHttps("certificate.pfx", "Marvin");
+                           IConfigurationSection cert = config.GetSection("Certificate");
+
+                           listenOptions.UseHttps(cert.GetValue<string>("FileName"), cert.GetValue<string>("Password"));
                        });
                    })
                    .UseWebRoot("Public")
