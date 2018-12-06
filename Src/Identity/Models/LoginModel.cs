@@ -12,16 +12,16 @@ namespace Identity.Models
             set;
         } = true;
 
-        public IEnumerable<ProviderModel> ExternalProviders
+        public IEnumerable<LoginProviderModel> LoginProviders
         {
             get;
             set;
         }
 
-        public IEnumerable<ProviderModel> VisibleExternalProviders => ExternalProviders.Where(x => !String.IsNullOrWhiteSpace(x.DisplayName));
+        public IEnumerable<LoginProviderModel> VisibleLoginProviders => LoginProviders.Where(x => !String.IsNullOrWhiteSpace(x.DisplayName));
 
-        public bool IsExternalLoginOnly => EnableLocalLogin == false && ExternalProviders?.Count() == 1;
+        public bool IsExternalLoginOnly => EnableLocalLogin == false && LoginProviders?.Count() == 1;
 
-        public string ExternalLoginScheme => IsExternalLoginOnly ? ExternalProviders?.SingleOrDefault()?.AuthenticationScheme : null;
+        public string ExternalLoginScheme => IsExternalLoginOnly ? LoginProviders?.SingleOrDefault()?.AuthenticationScheme : null;
     }
 }
