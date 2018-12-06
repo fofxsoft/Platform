@@ -31,9 +31,9 @@
         <div class="login-actions">
             <button name="button" class="button accent" value="login">Sign In</button>
 
-            @if (Model.VisibleExternalProviders.Any())
+            @if (Model.VisibleLoginProviders.Any())
             {
-                @foreach (var provider in Model.VisibleExternalProviders)
+                @foreach (var provider in Model.VisibleLoginProviders)
                 {
                     @switch (@provider.AuthenticationScheme)
                     {
@@ -48,7 +48,7 @@
     </form>
 }
 
-@if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
+@if (!Model.EnableLocalLogin && !Model.VisibleLoginProviders.Any())
 {
     <div>
         <strong>Invalid login request</strong> There are no login schemes configured for this client.

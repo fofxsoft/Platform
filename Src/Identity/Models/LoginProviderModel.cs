@@ -1,6 +1,6 @@
 ﻿namespace Identity.Models
 {
-    public class ProviderModel
+    public class LoginProviderModel
     {
         public string DisplayName
         {

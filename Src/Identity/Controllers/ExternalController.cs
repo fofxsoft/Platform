@@ -8,12 +8,11 @@ using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
-using IdentityServer4.Test;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using IdentityServer4.Models;
 using Identity.Models;
 
 namespace Identity.Controllers
@@ -24,17 +23,16 @@ namespace Identity.Controllers
     [AllowAnonymous]
     public class ExternalController : Controller
     {
-        private readonly TestUserStore _users;
+        private readonly UserManager<UserModel> _userManager;
+        private readonly SignInManager<UserModel> _signInManager;
         private readonly IIdentityServerInteractionService _interaction;
-        private readonly IClientStore _clientStore;
         private readonly IEventService _events;
 
-        public ExternalController(IIdentityServerInteractionService interaction, IClientStore clientStore, IEventService events, TestUserStore users = null)
+        public ExternalController(UserManager<UserModel> userManager, SignInManager<UserModel> signInManager, IIdentityServerInteractionService interaction, IClientStore clientStore, IAuthenticationSchemeProvider schemeProvider, IEventService events)
         {
-            _users = users ?? new TestUserStore(TestUsers.Users);
-
+            _userManager = userManager;
+            _signInManager = signInManager;
             _interaction = interaction;
-            _clientStore = clientStore;
             _events = events;
         }
 
@@ -42,32 +40,19 @@ namespace Identity.Controllers
         [HttpGet]
         public async Task<IActionResult> GetChallenge(string provider, string returnUrl)
         {
-            if (string.IsNullOrEmpty(returnUrl)) returnUrl = "~/";
-
-            if (Url.IsLocalUrl(returnUrl) == false && _interaction.IsValidReturnUrl(returnUrl) == false)
-            {
-                throw new Exception("invalid return URL");
-            }
-
             if (Config.WindowsAuthenticationSchemeName == provider)
             {
                 return await ProcessWindowsLoginAsync(returnUrl);
             }
             else
             {
-                AuthenticationProperties props = new AuthenticationProperties
+                var props = new AuthenticationProperties()
                 {
-                    RedirectUri = Url.Action(nameof(GetCallback)),
+                    RedirectUri = Url.Action("callback"),
                     Items =
                     {
-                        {
-                            "returnUrl",
-                            returnUrl
-                        },
-                        {
-                            "scheme",
-                            provider
-                        },
+                        { "returnUrl", returnUrl },
+                        { "scheme", provider },
                     }
                 };
 
@@ -79,18 +64,18 @@ namespace Identity.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCallback()
         {
-            AuthenticateResult result = await HttpContext.AuthenticateAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme);
+            AuthenticateResult result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
 
             if (result?.Succeeded != true)
             {
                 throw new Exception("External authentication error");
             }
 
-            (TestUser user, string provider, string providerUserId, IEnumerable <Claim> claims) = FindUserByExternalProvider(result);
+            (UserModel user, string provider, string providerUserId, IEnumerable <Claim> claims) = await FindUserByExternalProviderAsync(result);
 
             if (user == null)
             {
-                user = AutoProvisionUser(provider, providerUserId, claims);
+                user = await AutoProvisionUserAsync(provider, providerUserId, claims);
             }
 
             List<Claim> additionalLocalClaims = new List<Claim>();
@@ -100,24 +85,24 @@ namespace Identity.Controllers
             ProcessLoginCallbackWsFed(result, additionalLocalClaims, localSignInProps);
             ProcessLoginCallbackSaml2p(result, additionalLocalClaims, localSignInProps);
 
-            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.SubjectId, user.Username));
+            ClaimsPrincipal principal = await _signInManager.CreateUserPrincipalAsync(user);
 
-            await HttpContext.SignInAsync(user.SubjectId, user.Username, provider, localSignInProps, additionalLocalClaims.ToArray());
-            await HttpContext.SignOutAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme);
+            additionalLocalClaims.AddRange(principal.Claims);
 
-            string returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
+            string name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? user.Id;
 
-            AuthorizationRequest context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id, name));
+            await HttpContext.SignInAsync(user.Id, name, provider, localSignInProps, additionalLocalClaims.ToArray());
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            if (context != null)
+            string returnUrl = result.Properties.Items["returnUrl"];
+
+            if (_interaction.IsValidReturnUrl(returnUrl) || Url.IsLocalUrl(returnUrl))
             {
-                if (await _clientStore.IsPkceClientAsync(context.ClientId))
-                {
-                    return Redirect(returnUrl);
-                }
+                return Redirect(returnUrl);
             }
 
-            return Redirect(returnUrl);
+            return Redirect("~/");
         }
 
         private async Task<IActionResult> ProcessWindowsLoginAsync(string returnUrl)
@@ -128,7 +113,7 @@ namespace Identity.Controllers
             {
                 AuthenticationProperties props = new AuthenticationProperties()
                 {
-                    RedirectUri = Url.Action("Callback"),
+                    RedirectUri = Url.Action("callback"),
                     Items =
                     {
                         {
@@ -147,7 +132,7 @@ namespace Identity.Controllers
                 id.AddClaim(new Claim(JwtClaimTypes.Subject, wp.Identity.Name));
                 id.AddClaim(new Claim(JwtClaimTypes.Name, wp.Identity.Name));
 
-                await HttpContext.SignInAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme, new ClaimsPrincipal(id), props);
+                await HttpContext.SignInAsync(IdentityConstants.ExternalScheme, new ClaimsPrincipal(id), props);
 
                 return Redirect(props.RedirectUri);
             }
@@ -157,7 +142,7 @@ namespace Identity.Controllers
             }
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserByExternalProvider(AuthenticateResult result)
+        private async Task<(UserModel user, string provider, string providerUserId, IEnumerable<Claim> claims)> FindUserByExternalProviderAsync(AuthenticateResult result)
         {
             ClaimsPrincipal externalUser = result.Principal;
             Claim userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ?? externalUser.FindFirst(ClaimTypes.NameIdentifier) ?? throw new Exception("Unknown userid");
@@ -168,14 +153,76 @@ namespace Identity.Controllers
             string provider = result.Properties.Items["scheme"];
             string providerUserId = userIdClaim.Value;
 
-            TestUser user = _users.FindByExternalProvider(provider, providerUserId);
+            UserModel user = await _userManager.FindByLoginAsync(provider, providerUserId);
 
             return (user, provider, providerUserId, claims);
         }
 
-        private TestUser AutoProvisionUser(string provider, string providerUserId, IEnumerable<Claim> claims)
+        private async Task<UserModel> AutoProvisionUserAsync(string provider, string providerUserId, IEnumerable<Claim> claims)
         {
-            return _users.AutoProvisionUser(provider, providerUserId, claims.ToList());
+            List<Claim> filtered = new List<Claim>();
+            string name = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Name)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
+
+            if (name != null)
+            {
+                filtered.Add(new Claim(JwtClaimTypes.Name, name));
+            }
+            else
+            {
+                string first = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.GivenName)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
+                string last = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.FamilyName)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Surname)?.Value;
+
+                if (first != null && last != null)
+                {
+                    filtered.Add(new Claim(JwtClaimTypes.Name, first + " " + last));
+                }
+                else if (first != null)
+                {
+                    filtered.Add(new Claim(JwtClaimTypes.Name, first));
+                }
+                else if (last != null)
+                {
+                    filtered.Add(new Claim(JwtClaimTypes.Name, last));
+                }
+            }
+
+            string email = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Email)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
+            if (email != null)
+            {
+                filtered.Add(new Claim(JwtClaimTypes.Email, email));
+            }
+
+            var user = new UserModel
+            {
+                UserName = Guid.NewGuid().ToString(),
+            };
+
+            IdentityResult identityResult = await _userManager.CreateAsync(user);
+
+            if (!identityResult.Succeeded)
+            {
+                throw new Exception(identityResult.Errors.First().Description);
+            }
+
+            if (filtered.Any())
+            {
+                identityResult = await _userManager.AddClaimsAsync(user, filtered);
+
+                if (!identityResult.Succeeded)
+                {
+                    throw new Exception(identityResult.Errors.First().Description);
+                }
+            }
+
+            identityResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, providerUserId, provider));
+
+            if (!identityResult.Succeeded)
+            {
+                throw new Exception(identityResult.Errors.First().Description);
+            }
+
+            return user;
         }
 
         private void ProcessLoginCallbackOidc(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)

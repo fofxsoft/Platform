@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using IdentityServer4;
 using Identity.Data;
 using Identity.Models;
 
@@ -72,7 +73,14 @@ namespace Identity
             }
 
             services.AddAuthentication()
-                    .AddCookie("Cookies");
+                    .AddCookie("Cookies")
+                    .AddGoogle("Google", options =>
+                    {
+                        IConfigurationSection provider = Configuration.GetSection("Google");
+
+                        options.ClientId = provider.GetValue<string>("ClientID");
+                        options.ClientSecret = provider.GetValue<string>("ClientSecret");
+                    });
 
         }
 

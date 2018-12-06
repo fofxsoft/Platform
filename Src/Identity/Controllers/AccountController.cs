@@ -145,9 +145,9 @@ namespace Identity.Controllers
                     ReturnUrl = returnUrl,
                     Username = context?.LoginHint,
 
-                    ExternalProviders = new ProviderModel[]
+                    LoginProviders = new LoginProviderModel[]
                     {
-                        new ProviderModel
+                        new LoginProviderModel
                         {
                             AuthenticationScheme = context.IdP
                         }
@@ -157,12 +157,13 @@ namespace Identity.Controllers
 
             IEnumerable<AuthenticationScheme> schemes = await _schemeProvider.GetAllSchemesAsync();
 
-            List<ProviderModel> providers = schemes.Where(x => x.DisplayName != null || x.Name.Equals(Config.WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase))
-                                                   .Select(x => new ProviderModel
-                                                   {
-                                                       DisplayName = x.DisplayName,
-                                                       AuthenticationScheme = x.Name
-                                                   }).ToList();
+            List<LoginProviderModel> providers = schemes
+                .Where(x => x.DisplayName != null || x.Name.Equals(Config.WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase))
+                .Select(x => new LoginProviderModel
+                {
+                    DisplayName = x.DisplayName,
+                    AuthenticationScheme = x.Name
+                }).ToList();
 
             bool allowLocal = true;
 
@@ -186,7 +187,7 @@ namespace Identity.Controllers
                 EnableLocalLogin = allowLocal,
                 ReturnUrl = returnUrl,
                 Username = context?.LoginHint,
-                ExternalProviders = providers.ToArray()
+                LoginProviders = providers.ToArray()
             };
         }
 
