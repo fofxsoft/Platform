@@ -112,11 +112,11 @@ input[type='password'] {
     .button.accent {
         border: 1px #3366cc solid;
         background-color: #3366cc;
-        color: #fff;
+        color: #f7f7f7;
     }
 
         .button.accent:hover {
-            color: #000;
+            color: #fff;
         }
 
     .button.danger {

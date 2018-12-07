@@ -73,33 +73,31 @@ namespace Identity.Controllers
 
             (UserModel user, string provider, string providerUserId, IEnumerable <Claim> claims) = await FindUserByExternalProviderAsync(result);
 
-            if (user == null)
+            if (user != null)
             {
-                user = await AutoProvisionUserAsync(provider, providerUserId, claims);
-            }
+                List<Claim> additionalLocalClaims = new List<Claim>();
+                AuthenticationProperties localSignInProps = new AuthenticationProperties();
 
-            List<Claim> additionalLocalClaims = new List<Claim>();
-            AuthenticationProperties localSignInProps = new AuthenticationProperties();
+                ProcessLoginCallbackOidc(result, additionalLocalClaims, localSignInProps);
+                ProcessLoginCallbackWsFed(result, additionalLocalClaims, localSignInProps);
+                ProcessLoginCallbackSaml2p(result, additionalLocalClaims, localSignInProps);
 
-            ProcessLoginCallbackOidc(result, additionalLocalClaims, localSignInProps);
-            ProcessLoginCallbackWsFed(result, additionalLocalClaims, localSignInProps);
-            ProcessLoginCallbackSaml2p(result, additionalLocalClaims, localSignInProps);
+                ClaimsPrincipal principal = await _signInManager.CreateUserPrincipalAsync(user);
 
-            ClaimsPrincipal principal = await _signInManager.CreateUserPrincipalAsync(user);
+                additionalLocalClaims.AddRange(principal.Claims);
 
-            additionalLocalClaims.AddRange(principal.Claims);
+                string name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? user.Id;
 
-            string name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? user.Id;
+                await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id, name));
+                await HttpContext.SignInAsync(user.Id, name, provider, localSignInProps, additionalLocalClaims.ToArray());
+                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id, name));
-            await HttpContext.SignInAsync(user.Id, name, provider, localSignInProps, additionalLocalClaims.ToArray());
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+                string returnUrl = result.Properties.Items["returnUrl"];
 
-            string returnUrl = result.Properties.Items["returnUrl"];
-
-            if (_interaction.IsValidReturnUrl(returnUrl) || Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
+                if (_interaction.IsValidReturnUrl(returnUrl) || Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
             }
 
             return Redirect("~/");
@@ -153,76 +151,9 @@ namespace Identity.Controllers
             string provider = result.Properties.Items["scheme"];
             string providerUserId = userIdClaim.Value;
 
-            UserModel user = await _userManager.FindByLoginAsync(provider, providerUserId);
+            UserModel user = await _userManager.FindByEmailAsync(claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Email)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value);
 
             return (user, provider, providerUserId, claims);
-        }
-
-        private async Task<UserModel> AutoProvisionUserAsync(string provider, string providerUserId, IEnumerable<Claim> claims)
-        {
-            List<Claim> filtered = new List<Claim>();
-            string name = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Name)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
-
-            if (name != null)
-            {
-                filtered.Add(new Claim(JwtClaimTypes.Name, name));
-            }
-            else
-            {
-                string first = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.GivenName)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
-                string last = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.FamilyName)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Surname)?.Value;
-
-                if (first != null && last != null)
-                {
-                    filtered.Add(new Claim(JwtClaimTypes.Name, first + " " + last));
-                }
-                else if (first != null)
-                {
-                    filtered.Add(new Claim(JwtClaimTypes.Name, first));
-                }
-                else if (last != null)
-                {
-                    filtered.Add(new Claim(JwtClaimTypes.Name, last));
-                }
-            }
-
-            string email = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Email)?.Value ?? claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
-
-            if (email != null)
-            {
-                filtered.Add(new Claim(JwtClaimTypes.Email, email));
-            }
-
-            var user = new UserModel
-            {
-                UserName = Guid.NewGuid().ToString(),
-            };
-
-            IdentityResult identityResult = await _userManager.CreateAsync(user);
-
-            if (!identityResult.Succeeded)
-            {
-                throw new Exception(identityResult.Errors.First().Description);
-            }
-
-            if (filtered.Any())
-            {
-                identityResult = await _userManager.AddClaimsAsync(user, filtered);
-
-                if (!identityResult.Succeeded)
-                {
-                    throw new Exception(identityResult.Errors.First().Description);
-                }
-            }
-
-            identityResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, providerUserId, provider));
-
-            if (!identityResult.Succeeded)
-            {
-                throw new Exception(identityResult.Errors.First().Description);
-            }
-
-            return user;
         }
 
         private void ProcessLoginCallbackOidc(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
