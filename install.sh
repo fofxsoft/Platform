@@ -149,26 +149,11 @@ if [[ "$node_version" == "" ]]; then
     echo "Installing Node"
 
     install_node
-    node_version=$(get_node_version)
-fi
-
-if [[ "$node_version" < "$required_node_version" ]]; then
-    echo "Updating Node"
-
     upgrade_node
     node_version=$(get_node_version)
 
     echo "Node $node_version Installed"
-fi
 
-npm_version=$(npm -v)
-
-echo "NPM Version $npm_version"
-
-if [[ "$npm_version" < "$required_npm_version" ]]; then
-    echo "Upgrading NPM"
-
-    npm install -g npm@$required_npm_version
     npm_version=$(npm -v)
 
     echo "NPM $npm_version Installed"
@@ -176,7 +161,6 @@ fi
 
 npm cache clean --force > /dev/null 2>&1
 
-echo "Node Installed"
 echo "---------------------------------------------------------"
 echo ""
 
