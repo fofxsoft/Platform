@@ -61,47 +61,59 @@ upgrade_node()
 {
     node_path=$(find_node)
 
+    export npm_config_loglevel=error
+
+    npm_prefix=$(npm get prefix)
+
     case $os in
         "Linux")
             case $arch in
                 "x86_64")
                     uninstall_node $node_path
 
-                    curl -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-x64.tar.gz
+                    curl -k -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-x64.tar.gz
                     tar -xzf ./node-v$required_node_version-linux-x64.tar.gz -C $node_path --strip-components=1 --no-same-owner > /dev/null 2>&1
                     rm -f ./node-v$required_node_version-linux-x64.tar.gz > /dev/null 2>&1
 
+                    npm config set -g prefix $npm_prefix
                     npm install -g npm@$required_npm_version
+                    npm config set -g prefix $npm_prefix
                     ;;
 
                 "armv6l")
                     uninstall_node $node_path
 
-                    curl -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-armv6l.tar.gz
+                    curl -k -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-armv6l.tar.gz
                     tar -xzf ./node-v$required_node_version-linux-armv7l.tar.gz -C $node_path --strip-components=1 --no-same-owner > /dev/null 2>&1
                     rm -f ./node-v$required_node_version-linux-armv7l.tar.gz > /dev/null 2>&1
 
+                    npm config set -g prefix $npm_prefix
                     npm install -g npm@$required_npm_version
+                    npm config set -g prefix $npm_prefix
                     ;;
 
                 "armv7l")
                     uninstall_node $node_path
 
-                    curl -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-armv7l.tar.gz
+                    curl -k -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-armv7l.tar.gz
                     tar -xzf ./node-v$required_node_version-linux-armv7l.tar.gz -C $node_path --strip-components=1 --no-same-owner > /dev/null 2>&1
                     rm -f ./node-v$required_node_version-linux-armv7l.tar.gz > /dev/null 2>&1
 
+                    npm config set -g prefix $npm_prefix
                     npm install -g npm@$required_npm_version
+                    npm config set -g prefix $npm_prefix
                     ;;
 
                 "armv8l")
                     uninstall_node $node_path
 
-                    curl -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-arm64.tar.gz
+                    curl -k -O https://nodejs.org/dist/v$required_node_version/node-v$required_node_version-linux-arm64.tar.gz
                     tar -xzf ./node-v$required_node_version-linux-arm64.tar.gz -C $node_path --strip-components=1 --no-same-owner > /dev/null 2>&1
                     rm -f ./node-v$required_node_version-linux-arm64.tar.gz > /dev/null 2>&1
 
+                    npm config set -g prefix $npm_prefix
                     npm install -g npm@$required_npm_version
+                    npm config set -g prefix $npm_prefix
                     ;;
             esac
             ;;
@@ -113,7 +125,9 @@ upgrade_node()
             tar -xzf ./node-v$required_node_version-linux-x64.tar.gz -C $node_path --strip-components=1 --no-same-owner > /dev/null 2>&1
             rm -f ./node-v$required_node_version-linux-x64.tar.gz > /dev/null 2>&1
 
+            npm config set -g prefix $npm_prefix
             npm install -g npm@$required_npm_version
+            npm config set -g prefix $npm_prefix
             ;;
     esac
 }
@@ -138,11 +152,13 @@ if [[ "$os" == "Darwin" && "$node_version" == "" ]]; then
     exit 1
 fi
 
-if command -v apt-get > /dev/null; then
-    echo "Updating Repositories"
+echo "Updating Repositories"
 
+if command -v yum > /dev/null; then
+    yum install -y curl tar git
+elif command -v apt-get > /dev/null; then
     apt-get update
-    apt-get install -y curl tar
+    apt-get install -y curl tar git
 fi
 
 if [[ "$node_version" == "" ]]; then
@@ -174,5 +190,11 @@ if [[ "$os" != "Darwin" ]]; then
         echo "---------------------------------------------------------"
 
         hoobs-init
+    elif command -v hoobs > /dev/null; then
+        echo ""
+        echo "Initializing HOOBS"
+        echo "---------------------------------------------------------"
+
+        hoobs service install
     fi
 fi
